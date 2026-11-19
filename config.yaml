@@ -1,0 +1,38 @@
+# config.yaml
+project_name: "MgF2_Substrate_MoDel"
+
+simulation:
+  wavelength_start_nm: 5500     
+  wavelength_end_nm: 7000
+  wavelength_points: 1000       
+  mesh_accuracy: 2              
+
+dataset:
+  output_csv: "dataset/spectral_data.csv"
+  num_samples: 10000            
+  test_size: 0.20               
+  batch_size: 128                # 128: more grad steps/epoch than 256
+
+specvit:
+  embed_dim: 96
+  num_heads: 8
+  depth: 6
+  dim_feedforward: 192
+  head_hidden: 256
+  learning_rate: 0.001
+  scheduler_T0: 50
+  n_cycles: 5
+
+metavit:
+  embed_dim: 128
+  num_heads: 8
+  depth: 6
+  dim_feedforward: 128
+  head_hidden: 128
+  segment_size: 10
+  learning_rate: 0.001
+  scheduler_T0: 50
+  n_cycles: 4
+  warmup_epochs: 30
+  recon_weight: 1.0
+  param_weight: 0.5     # 0.1 থেকে 0.5 -- diversity-কে explicitly reward করার জন্য
