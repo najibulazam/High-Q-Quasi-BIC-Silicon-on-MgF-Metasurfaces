@@ -2,14 +2,14 @@
 project_name: "MgF2_Substrate_MoDel"
 
 simulation:
-  wavelength_start_nm: 5500     
-  wavelength_end_nm: 7000
+  wavelength_start_nm: 5600     
+  wavelength_end_nm: 6600
   wavelength_points: 1000       
   mesh_accuracy: 2              
 
 dataset:
   output_csv: "dataset/spectral_data.csv"
-  num_samples: 10000            
+  num_samples: 11000            
   test_size: 0.20               
   batch_size: 128                # 128: more grad steps/epoch than 256
 

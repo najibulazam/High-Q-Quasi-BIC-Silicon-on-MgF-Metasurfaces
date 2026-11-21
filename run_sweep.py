@@ -29,9 +29,9 @@ with open("config.yaml", "r", encoding="utf-8") as f:
     config = yaml.safe_load(f)
 
 def run_automated_sweep():
-    num_samples = config.get('dataset', {}).get('num_samples', 12600)
+    num_samples = config.get('dataset', {}).get('num_samples', 11000)
     w_points    = config.get('simulation', {}).get('wavelength_points', 1000)
-    output_csv  = config.get('dataset', {}).get('output_csv', 'dataset/qBIC_spectral_data.csv')
+    output_csv  = config.get('dataset', {}).get('output_csv', 'dataset/spectral_data.csv')
 
     fsp_file_path = os.path.abspath("MgF2-Substrate-Structure.fsp")
     if not os.path.exists(fsp_file_path):
@@ -60,8 +60,8 @@ def run_automated_sweep():
     print(f"🚀 Launching Lumerical and loading: {fsp_file_path}...")
     fd = lumapi.FDTD(filename=fsp_file_path)
 
-    w_start = config.get('simulation', {}).get('wavelength_start_nm', 5500) * 1e-9
-    w_end   = config.get('simulation', {}).get('wavelength_end_nm',   7000) * 1e-9
+    w_start = config.get('simulation', {}).get('wavelength_start_nm', 5600) * 1e-9
+    w_end   = config.get('simulation', {}).get('wavelength_end_nm',   6600) * 1e-9
 
     print(f"⚙️  Wavelength range: {w_start*1e6:.2f} µm to {w_end*1e6:.2f} µm, {w_points} points")
 

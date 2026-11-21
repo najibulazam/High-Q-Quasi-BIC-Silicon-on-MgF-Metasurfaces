@@ -35,7 +35,7 @@ def _filter_bad_labels(df, r_cols, edge_margin_frac=0.02, weak_thresh=0.3):
     return df[~bad].reset_index(drop=True)
 
 def get_meta_loaders():
-    csv_path = config.get('dataset', {}).get('output_csv', 'dataset/qBIC_spectral_data.csv')
+    csv_path = config.get('dataset', {}).get('output_csv', 'dataset/spectral_data.csv')
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"❌ {csv_path} not found!")
 
@@ -51,7 +51,7 @@ def get_meta_loaders():
     Y_spec = df[spec_cols].values
 
     test_size  = config.get('dataset', {}).get('test_size',  0.20)
-    batch_size = config.get('dataset', {}).get('batch_size', 64)
+    batch_size = config.get('dataset', {}).get('batch_size', 128)
 
     X_train_geo, X_val_geo, Y_train_spec, Y_val_spec = train_test_split(
         X_geo, Y_spec, test_size=test_size, random_state=42
