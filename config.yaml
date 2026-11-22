@@ -1,9 +1,9 @@
 # config.yaml
-project_name: "MgF2_Substrate_MoDel"
+project_name: "Silicon-on-MgF2 Metasurface"
 
 simulation:
-  wavelength_start_nm: 5600     
-  wavelength_end_nm: 6600
+  wavelength_start_nm: 5500     
+  wavelength_end_nm: 7000
   wavelength_points: 1000       
   mesh_accuracy: 2              
 

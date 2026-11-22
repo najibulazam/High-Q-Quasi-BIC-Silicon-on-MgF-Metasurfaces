@@ -5,6 +5,19 @@ import numpy as np
 import pandas as pd
 import yaml
 
+# Enable native ANSI color support in Windows terminal without any external package
+os.system('')
+
+CLR_RESET   = "\033[0m"
+CLR_BOLD    = "\033[1m"
+CLR_CYAN    = "\033[1;36m"
+CLR_GREEN   = "\033[1;32m"
+CLR_YELLOW  = "\033[1;33m"
+CLR_BLUE    = "\033[1;34m"
+CLR_MAGENTA = "\033[1;35m"
+CLR_RED     = "\033[1;31m"
+CLR_GRAY    = "\033[90m"
+
 try:
     import lumapi
 except ImportError:
@@ -33,47 +46,47 @@ def run_automated_sweep():
     w_points    = config.get('simulation', {}).get('wavelength_points', 1000)
     output_csv  = config.get('dataset', {}).get('output_csv', 'dataset/spectral_data.csv')
 
-    fsp_file_path = os.path.abspath("MgF2-Substrate-Structure.fsp")
+    fsp_file_path = os.path.abspath("Silicon-on-MgF2-Metasurface.fsp")
     if not os.path.exists(fsp_file_path):
-        print(f"[ERROR] Simulation file not found: {fsp_file_path}")
+        print(f"{CLR_RED}[ERROR]{CLR_RESET} Simulation file not found: {fsp_file_path}")
         return
 
     # ---- Resume logic ----
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 
-    print("=" * 60)
-    print(" [SWEEP] MgF2 Substrate Metasurface Automated Sweep")
-    print("=" * 60)
+    print(f"{CLR_CYAN}=" * 60)
+    print(f" {CLR_BOLD}[SWEEP]{CLR_RESET} {CLR_CYAN}Silicon-on-MgF2 Metasurface  Automated Sweep{CLR_RESET}")
+    print(f"{CLR_CYAN}=" * 60 + f"{CLR_RESET}")
 
     if os.path.exists(output_csv):
         existing_df  = pd.read_csv(output_csv)
         start_idx    = len(existing_df)
         header_written = True
-        print(f"[RESUME] Existing dataset found: {start_idx} samples completed.")
-        print(f"[RESUME] Resuming from sample {start_idx + 1}/{num_samples}...")
+        print(f"{CLR_YELLOW}[RESUME]{CLR_RESET} Existing dataset found: {CLR_BOLD}{start_idx}{CLR_RESET} samples completed.")
+        print(f"{CLR_YELLOW}[RESUMING]{CLR_RESET} Resuming from sample {CLR_BOLD}{start_idx + 1}/{num_samples}{CLR_RESET}...")
     else:
         start_idx      = 0
         header_written = False
-        print("[INIT]   No existing dataset found. Starting fresh sweep.")
+        print(f"{CLR_BLUE}[INIT]{CLR_RESET}   No existing dataset found. Starting fresh sweep.")
 
     if start_idx >= num_samples:
-        print("[DONE]   Target reached! Dataset is already complete.")
+        print(f"{CLR_GREEN}[DONE]{CLR_RESET}   Target reached! Dataset is already complete.")
         return
 
     # ---- Lumerical session ----
-    print(f"[FDTD]   Launching Lumerical engine with: {os.path.basename(fsp_file_path)}...")
+    print(f"{CLR_MAGENTA}[FDTD]{CLR_RESET}   Launching Lumerical engine with: {CLR_BOLD}{os.path.basename(fsp_file_path)}{CLR_RESET}")
     fd = lumapi.FDTD(filename=fsp_file_path)
 
-    w_start = config.get('simulation', {}).get('wavelength_start_nm', 5600) * 1e-9
-    w_end   = config.get('simulation', {}).get('wavelength_end_nm',   6600) * 1e-9
+    w_start = config.get('simulation', {}).get('wavelength_start_nm', 5500) * 1e-9
+    w_end   = config.get('simulation', {}).get('wavelength_end_nm',   7000) * 1e-9
 
-    print(f"[CONFIG] Wavelength range: {w_start*1e6:.2f} um to {w_end*1e6:.2f} um | Points: {w_points}")
+    print(f"{CLR_BLUE}[CONFIG]{CLR_RESET} Wavelength range: {CLR_BOLD}{w_start*1e6:.2f} um to {w_end*1e6:.2f} um{CLR_RESET} | Points: {CLR_BOLD}{w_points}{CLR_RESET}")
 
     for source_name in ["source", "Plane Source"]:
         try:
             fd.setnamed(source_name, "wavelength start", w_start)
             fd.setnamed(source_name, "wavelength stop",  w_end)
-            print(f"  |-- Source configured: '{source_name}'")
+            print(f"  {CLR_GRAY}|--{CLR_RESET} Source configured: '{source_name}'")
             break
         except Exception:
             continue
@@ -82,12 +95,12 @@ def run_automated_sweep():
         try:
             fd.setnamed(monitor_name, "override global monitor settings", True)
             fd.setnamed(monitor_name, "frequency points", w_points)
-            print(f"  |-- Monitor configured: '{monitor_name}' ({w_points} pts)")
+            print(f"  {CLR_GRAY}|--{CLR_RESET} Monitor configured: '{monitor_name}' ({w_points} pts)")
             break
         except Exception:
             continue
 
-    print("-" * 60)
+    print(f"{CLR_GRAY}-" * 60 + f"{CLR_RESET}")
 
     # ---- Sweep loop ----
     for i in range(start_idx, num_samples):
@@ -110,7 +123,7 @@ def run_automated_sweep():
         fd.setnamed("Right ellipse", "radius 2", R2)
         fd.setnamed("Right ellipse", "z span",   H)
 
-        print(f"[RUN]  Sample {i+1}/{num_samples} | Simulating: H={H*1e6:.3f}um, R1={R1*1e6:.3f}um...")
+        print(f"{CLR_GREEN}[SIMULATION RUNNNING]{CLR_RESET}  Sample {i+1}/{num_samples} | Simulating: H={H*1e6:.3f}um, R1={R1*1e6:.3f}um, R2={R2*1e6:.3f}um, Px={Px*1e6:.3f}um, Py={Py*1e6:.3f}um")
         fd.run()
 
         R_result       = fd.getresult("R", "T")
@@ -135,12 +148,12 @@ def run_automated_sweep():
         else:
             row_df.to_csv(output_csv, index=False, mode='a', header=False)
 
-        print(f"  |-- Saved -> {output_csv} (Sample {i+1}/{num_samples})")
+        print(f"  {CLR_GRAY}|--{CLR_RESET} {CLR_GREEN}Saved{CLR_RESET} -> {output_csv} (Sample {i+1}/{num_samples})")
 
     fd.close()
-    print("=" * 60)
-    print(f"[DONE] Sweep complete! Total {num_samples} samples generated in '{output_csv}'.")
-    print("=" * 60)
+    print(f"{CLR_CYAN}=" * 60 + f"{CLR_RESET}")
+    print(f"{CLR_GREEN}[DONE]{CLR_RESET} Sweep complete! Total {CLR_BOLD}{num_samples}{CLR_RESET} samples generated in '{output_csv}'.")
+    print(f"{CLR_CYAN}=" * 60 + f"{CLR_RESET}")
 
 if __name__ == "__main__":
     run_automated_sweep()
