@@ -35,41 +35,45 @@ def run_automated_sweep():
 
     fsp_file_path = os.path.abspath("MgF2-Substrate-Structure.fsp")
     if not os.path.exists(fsp_file_path):
-        print(f"❌ Error: {fsp_file_path} not found!")
+        print(f"[ERROR] Simulation file not found: {fsp_file_path}")
         return
 
     # ---- Resume logic ----
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 
+    print("=" * 60)
+    print(" [SWEEP] MgF2 Substrate Metasurface Automated Sweep")
+    print("=" * 60)
+
     if os.path.exists(output_csv):
         existing_df  = pd.read_csv(output_csv)
         start_idx    = len(existing_df)
         header_written = True
-        print(f"▶️  Existing data found: {start_idx} samples already done.")
-        print(f"▶️  Resuming from sample {start_idx + 1}/{num_samples}...")
+        print(f"[RESUME] Existing dataset found: {start_idx} samples completed.")
+        print(f"[RESUME] Resuming from sample {start_idx + 1}/{num_samples}...")
     else:
         start_idx      = 0
         header_written = False
-        print(f"🆕 No existing data found. Starting fresh.")
+        print("[INIT]   No existing dataset found. Starting fresh sweep.")
 
     if start_idx >= num_samples:
-        print("✅ Dataset already complete! Nothing to do.")
+        print("[DONE]   Target reached! Dataset is already complete.")
         return
 
     # ---- Lumerical session ----
-    print(f"🚀 Launching Lumerical and loading: {fsp_file_path}...")
+    print(f"[FDTD]   Launching Lumerical engine with: {os.path.basename(fsp_file_path)}...")
     fd = lumapi.FDTD(filename=fsp_file_path)
 
     w_start = config.get('simulation', {}).get('wavelength_start_nm', 5600) * 1e-9
     w_end   = config.get('simulation', {}).get('wavelength_end_nm',   6600) * 1e-9
 
-    print(f"⚙️  Wavelength range: {w_start*1e6:.2f} µm to {w_end*1e6:.2f} µm, {w_points} points")
+    print(f"[CONFIG] Wavelength range: {w_start*1e6:.2f} um to {w_end*1e6:.2f} um | Points: {w_points}")
 
     for source_name in ["source", "Plane Source"]:
         try:
             fd.setnamed(source_name, "wavelength start", w_start)
             fd.setnamed(source_name, "wavelength stop",  w_end)
-            print(f"  ✅ Wavelength set on source: '{source_name}'")
+            print(f"  |-- Source configured: '{source_name}'")
             break
         except Exception:
             continue
@@ -78,10 +82,12 @@ def run_automated_sweep():
         try:
             fd.setnamed(monitor_name, "override global monitor settings", True)
             fd.setnamed(monitor_name, "frequency points", w_points)
-            print(f"  ✅ Frequency points set on monitor: '{monitor_name}'")
+            print(f"  |-- Monitor configured: '{monitor_name}' ({w_points} pts)")
             break
         except Exception:
             continue
+
+    print("-" * 60)
 
     # ---- Sweep loop ----
     for i in range(start_idx, num_samples):
@@ -104,7 +110,7 @@ def run_automated_sweep():
         fd.setnamed("Right ellipse", "radius 2", R2)
         fd.setnamed("Right ellipse", "z span",   H)
 
-        print(f"⏳ Running simulation {i+1}/{num_samples}...")
+        print(f"[RUN]  Sample {i+1}/{num_samples} | Simulating: H={H*1e6:.3f}um, R1={R1*1e6:.3f}um...")
         fd.run()
 
         R_result       = fd.getresult("R", "T")
@@ -129,10 +135,12 @@ def run_automated_sweep():
         else:
             row_df.to_csv(output_csv, index=False, mode='a', header=False)
 
-        print(f"  💾 Row {i+1}/{num_samples} saved → {output_csv}")
+        print(f"  |-- Saved -> {output_csv} (Sample {i+1}/{num_samples})")
 
     fd.close()
-    print("🎉 Sweep complete! Dataset ready for SpecViT & MetaViT.")
+    print("=" * 60)
+    print(f"[DONE] Sweep complete! Total {num_samples} samples generated in '{output_csv}'.")
+    print("=" * 60)
 
 if __name__ == "__main__":
     run_automated_sweep()
